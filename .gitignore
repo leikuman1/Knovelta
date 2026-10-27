@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+data/
+.test-data*/
+playwright-report/
+test-results/
+tests/e2e/.results/
+tests/e2e/.report/
+coverage/
+*.tsbuildinfo
+*.log
+.DS_Store
+.claude/

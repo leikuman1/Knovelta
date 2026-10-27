@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atomic STAR 草案</title>
+<style>
+/* 单栏项目论证：先给简历主线，再用 STAR 与验收证据展开。 */
+:root {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --fg: #182b43;
+  --muted: #52647a;
+  --accent: #245bb4;
+  --line: #ccd8e7;
+  --display: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
+  --body: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111b28; --surface: #192638; --fg: #e5edf8; --muted: #acbfd6;
+    --accent: #99beff; --line: #3b4d65; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111b28; --surface: #192638; --fg: #e5edf8; --muted: #acbfd6;
+  --accent: #99beff; --line: #3b4d65; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.85 var(--body);
+  padding-block: 44px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); overflow-wrap: anywhere; }
+main { max-width: 850px; margin-inline: auto; display: grid; gap: 32px; }
+header, section, footer { min-width: 0; }
+h1, h2, h3, p, dl, dd, ul, ol { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+h1 { font: 600 clamp(28px, 5vw, 40px)/1.35 var(--display); }
+h2 { font-size: 23px; line-height: 1.5; }
+h3 { font-size: 17px; }
+p + p { margin-top: 12px; }
+header { display: grid; gap: 14px; }
+.eyebrow { color: var(--accent); font-size: 13px; font-weight: 650; letter-spacing: .07em; }
+.muted, footer { color: var(--muted); }
+.thesis { font-size: 19px; }
+.notice { border: 1px solid var(--line); background: var(--surface); padding: 18px 22px; }
+.case { border-top: 1px solid var(--line); padding-top: 24px; display: grid; gap: 18px; }
+.stage { font-size: 13px; font-weight: 600; color: var(--accent); }
+.case-head { display: grid; gap: 5px; }
+dl { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 15px 20px; }
+dt { color: var(--muted); font-weight: 600; }
+dd { min-width: 0; }
+.evidence { padding: 17px 20px; background: var(--surface); border: 1px solid var(--line); }
+.evidence strong { color: var(--accent); }
+.resume { display: grid; gap: 16px; padding-top: 25px; border-top: 1px solid var(--line); }
+.resume ol, .next ol { padding-left: 1.5em; display: grid; gap: 14px; }
+.next { display: grid; gap: 14px; }
+code { font: .9em/1.6 ui-monospace, Consolas, monospace; color: var(--accent); }
+footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13px; }
+.choice-group { display: grid; gap: 14px; min-width: 0; }
+.choice-group + .choice-group { border-top: 1px solid var(--line); padding-top: 20px; }
+.comparison-wrap { max-width: 100%; min-width: 0; overflow-x: auto; }
+.comparison { width: 100%; min-width: 620px; border-collapse: collapse; text-align: left; font-size: 14px; line-height: 1.8; }
+.comparison th, .comparison td { padding: 13px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.comparison thead { background: var(--surface); }
+.comparison th { font-weight: 600; }
+.comparison th:first-child { width: 19%; }
+.comparison td { width: 27%; }
+.comparison caption { text-align: left; font-size: 17px; font-weight: 600; padding-bottom: 12px; }
+.comparison-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.reference-link { color: var(--accent); text-underline-offset: 3px; }
+.reference-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.implementation-steps, .reference-list { margin: 0; padding-left: 1.5em; display: grid; gap: 11px; }
+@media (max-width: 560px) {
+  body { padding-block: 26px 40px; font-size: 15px; }
+  main { gap: 25px; }
+  dl { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  dd + dt { margin-top: 10px; }
+  .notice, .evidence { padding: 16px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Atomic 产品研究 · STAR 与面试准备</p>
+    <h1>Atomic 产品亮点</h1>
+    <p class="thesis">从原子笔记、主题 Wiki 到定期报告，研究个人知识如何被组织与复用。</p>
+    <p class="muted">公开实现技术栈：Rust 核心与服务端、React、SQLite + sqlite-vec；桌面端采用 Tauri。</p>
+  </header>
+  <aside class="notice" aria-label="研究与复现状态">
+    <strong>本文为公开产品研究与个人复现规划。</strong>
+    <p>区分已确认的 Atomic 实现与个人复现、改进建议。STAR 中 A 记录公开实现，R 说明能力与待测指标；方案取舍为本页的工程分析。个人简历模板需在实际完成对应复现或贡献后填写。</p>
+  </aside>
+  <section class="case" id="atomic-reference">
+    <div class="case-head">
+      <p class="stage">产品参考 · Atomic · 公开资料核查于 2026-10-25</p>
+      <h2>从 Atomic 提炼值得实现的项目亮点</h2>
+    </div>
+    <p><a class="reference-link" href="https://atomicapp.ai/" target="_blank" rel="noopener noreferrer">Atomic</a> 将 Markdown 笔记称为 atom，围绕它提供异步整理、语义搜索、按标签综合 Wiki、带引用的聊天、空间画布、定期报告和 MCP 接入。本页独立整理四条核心亮点及其公开实现、替代方案和复现验证方法。</p>
+    <p class="evidence"><strong>阅读约定：</strong>“Atomic 已公开”对应官网、文档及注明版本的源码；“个人复现与改进建议”属于独立工程设计。下文选型理由不代表原作者的决策记录，也不将未经验证的可靠性设计归于 Atomic。</p>
+    <div class="comparison-wrap" tabindex="0" role="region" aria-label="Atomic 产品亮点总览">
+      <table class="comparison">
+        <caption>从产品能力到工程亮点</caption>
+        <thead><tr><th scope="col">产品能力</th><th scope="col">核心工程问题</th><th scope="col">本页位置</th><th scope="col">个人复现的证明材料</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">异步处理与自动标签</th><td>保存与 AI 处理分离，结构化组织笔记。</td><td>亮点一：处理流水线。</td><td>阶段状态、标签人工覆盖与失败恢复用例。</td></tr>
+          <tr><th scope="row">带引用的增量 Wiki</th><td>按主题选源，把新资料融入已有文章。</td><td>亮点二：主题综合。</td><td>提案、基础版本校验、引用映射与全量对照实验。</td></tr>
+          <tr><th scope="row">Daily Briefing / Reports</th><td>分开设置本期来源和历史上下文，产出定期报告。</td><td>亮点三：定期知识回顾。</td><td>运行记录、来源窗口、引用策略与使用反馈。</td></tr>
+          <tr><th scope="row">MCP 记忆接口</th><td>让不同 Agent 接入同一知识服务。</td><td>亮点四：外部工具接口。</td><td>客户端兼容、版本冲突与访问控制测试。</td></tr>
+          <tr><th scope="row">语义搜索与范围聊天</th><td>查询词向量化、片段召回和主题范围约束。</td><td>贯穿 Wiki、报告和 MCP，不重复计数。</td><td>固定语料与查询集上的检索、引用支持度实验。</td></tr>
+          <tr><th scope="row">空间画布与多端入口</th><td>布局、聚合展示与共享核心 API。</td><td>附加产品能力，不展开个人实现计划。</td><td>需要进一步研究和运行验证；语义边不等于事实关系。</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Atomic 文档描述桌面端、自托管和云端共用核心引擎与 HTTP API；本地优先不等于所有 AI 调用都在本机，是否出本机取决于模型和 Embedding 提供商配置。</p>
+  </section>
+
+  <section class="case" id="atomic-pipeline">
+    <div class="case-head">
+      <p class="stage">亮点一 · 异步处理与自动组织</p>
+      <h2>可重试、可追踪的知识处理流水线</h2>
+    </div>
+    <p><strong>Atomic 已公开：</strong><a class="reference-link" href="https://atomicapp.ai/concepts/atoms/" target="_blank" rel="noopener noreferrer">Atoms 文档</a>描述先返回已保存笔记，再异步分块、Embedding、标签抽取及语义边构建，并展示 pending / processing / complete / failed 等状态；<a class="reference-link" href="https://atomicapp.ai/concepts/tags/" target="_blank" rel="noopener noreferrer">Tags 文档</a>说明自动标签与手动标签共存，标签也用于 Wiki 和聊天范围。</p>
+    <dl>
+      <dt>S · 情境</dt><dd>模型与 Embedding 调用较慢且可能失败；用户连续补充同一笔记时，较早启动的处理也可能晚于新版本结束。</dd>
+      <dt>T · 任务</dt><dd>让记录快速完成持久化，后台整理能观察进度、重试，并避免旧结果覆盖最新知识。</dd>
+      <dt>A · 公开实现</dt><dd>保存笔记后异步执行 Markdown 感知分块、Embedding、结构化标签抽取和语义边构建；分别记录 Embedding 与标签状态。标签抽取结合允许的顶层分类及常用子标签候选，区分 auto / manual 来源并保留人工标签。</dd>
+      <dt>R · 能力与待测结果</dt><dd>已公开实现体现了记录与 AI 处理分离、标签与检索可复用的链路。本轮未测成功率或延迟；个人复现应测试中断重启、重复任务和连续更新，报告保存耗时、完整处理时长与过期结果数。</dd>
+    </dl>
+    <article class="choice-group">
+      <h3>个人复现与改进建议</h3>
+      <ol class="implementation-steps">
+        <li>atom 持久化后才报告“已记录”；待处理的已保存 atom 可在重启时扫描补齐任务。个人改进可增加整理正文的 Proposal 审批，后台标签建议保留人工分类。</li>
+        <li>任务记录包含 taskId、sourceId 或 noteId、contentHash / version、stage、attempt、leaseUntil 和错误信息。按“对象 + 内容版本 + 阶段 + 处理器配置”建立唯一任务约束；使用 SQLite 事务领取任务。</li>
+        <li>各阶段检查输入版本；Embedding 的配置包含模型及分块版本，改变配置需要重建。个人复现可将阶段结果与完成状态放进同一数据库事务，并在启动时重领过期任务；若另外导出文件，导出失败应能从权威数据重建。</li>
+        <li>用词典与已有标签候选约束模型结构化抽取，维护标签别名和人工覆盖标记。语义近邻作为“可能相关”保存，不自动变成同义、支持或因果关系。</li>
+      </ol>
+      <p class="muted">模型调用不能依赖数据库锁保持整个过程；任务 lease 到期可重领，但最终提交还要检查执行身份或任务版本。数据库幂等可限制重复副作用，无法保证外部模型请求只计费一次。</p>
+    </article>
+    <div class="comparison-wrap" tabindex="0" role="region" aria-label="知识处理流水线方法比较">
+      <table class="comparison">
+        <caption>其他方法、优劣与选择</caption>
+        <thead><tr><th scope="col">方法</th><th scope="col">优点</th><th scope="col">缺点</th><th scope="col">适用场景</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">SQLite 任务表 + 独立 worker</th><td>少依赖，任务跨重启保存，状态、去重与业务版本容易关联。</td><td>需实现领取、lease、重试与故障恢复；SQLite 写并发有限。</td><td>本地单用户、任务量有限且需要可靠后台处理。</td></tr>
+          <tr><th scope="row">请求内同步处理</th><td>控制流简单，错误立即可见，容易建立首个可运行版本。</td><td>用户等待整条链路，请求超时与部分成功状态需要处理。</td><td>输入较少、处理步骤短，或验证功能价值的早期样机。</td></tr>
+          <tr><th scope="row">进程内异步队列</th><td>接入成本低，可限制并发，容易快速实现保存后处理。</td><td>进程退出丢失队列和执行状态；需靠持久化原文扫描补偿。</td><td>任务可廉价重建、能接受重启后重做的原型。</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>方法选择分析：</strong>本地应用会关闭或重启，处理状态需要持久化；SQLite 已是项目依赖，因此可先用任务表满足恢复需求。首版只有短 FTS 更新时不必提前建设完整 worker，自动标签和 Embedding 出现后再逐步引入。</p>
+    <p class="evidence"><strong>个人复现面试参考：</strong>我把“保存成功”和“AI 整理完成”分开反馈。比较过同步调用与进程内队列；为了能在重启后恢复，倾向将任务存入 SQLite，再由单独 worker 执行。用任务唯一键和版本检查控制重复副作用与旧结果，验收时会主动中断处理和连续修改笔记。</p>
+    <p><strong>个人复现完成后的简历模板：</strong>设计基于 SQLite 的持久化知识处理流水线，将原文保存与标签、索引处理解耦；通过阶段状态、任务幂等与版本校验支持重试和中断恢复，在［N］组重复与故障用例中，过期结果落库［X］次，处理成功率为［Y］。</p>
+  </section>
+
+  <section class="case" id="atomic-wiki">
+    <div class="case-head">
+      <p class="stage">亮点二 · 可追溯的主题综合</p>
+      <h2>按主题增量生成带来源的 Wiki</h2>
+    </div>
+    <p><strong>Atomic 已公开：</strong><a class="reference-link" href="https://atomicapp.ai/concepts/wiki-synthesis/" target="_blank" rel="noopener noreferrer">Wiki Synthesis 文档</a>描述按标签选择资料与片段、生成带引用的 Markdown、保存版本、增量整合新增内容，并提供 propose / accept / dismiss 流程。文档要求引用支持观点，但引用标记有效并不能单独证明语义支持。</p>
+    <dl>
+      <dt>S · 情境</dt><dd>同一主题的材料散落在多条笔记中，逐条阅读成本较高；每次重新生成整篇总结会重复消耗上下文，并可能改变此前已确认的表述。</dd>
+      <dt>T · 任务</dt><dd>让主题文章随资料增长而更新，同时保留每项结论的依据、可审查变更与历史版本。</dd>
+      <dt>A · 公开实现</dt><dd>按标签及其后代选取 captured 来源，以标签向量中心排序片段并限制 Token 预算；增量路径筛选文章更新后新建的资料，通过分节操作合并正文。提案保存文章基础 ID 和更新时间，批准时校验；同时保存引用映射与历史版本。</dd>
+      <dt>R · 能力与待测结果</dt><dd>已确认按主题综合、新资料增量提案与过期提案拒绝路径。完整依赖失效重建和逐句事实支持验证未被确认；个人复现需要比较全量与增量的 Token、遗漏、引用支持度和多轮漂移。</dd>
+    </dl>
+    <article class="choice-group">
+      <h3>个人复现与改进建议</h3>
+      <ol class="implementation-steps">
+        <li>先以手动主题或已批准标签确定范围，保存 topicId、articleVersion 与 sourceId / noteVersion / chunkId 清单；主题归属有歧义时先请求确认。</li>
+        <li>以内容哈希比较来源集合。新增资料时将当前文章、既有引用目录和新增片段提供给模型，并保留按来源 ID 回读旧证据的工具；不能只依赖旧摘要证明原有观点。</li>
+        <li>生成结构化段落及引用，后端验证引用属于本次允许来源、版本可定位，摘录确实来自对应片段；再渲染为 Markdown。语义支持度另用人工标注抽查评估。</li>
+        <li>来源更新、删除或主题迁移使相关段落失效；重读旧、新证据后生成修订 Proposal。审批检查文章与来源版本，过期则重做；定期用全量结果检查增量漂移。</li>
+      </ol>
+      <p class="muted">直接不断改写旧摘要会传播遗漏与误解。“增量”应减少重复处理，同时保留回读证据和重建路径；成本下降与质量是否守住需要分别验证。</p>
+    </article>
+    <div class="comparison-wrap" tabindex="0" role="region" aria-label="Wiki 综合方法比较">
+      <table class="comparison">
+        <caption>其他方法、优劣与选择</caption>
+        <thead><tr><th scope="col">方法</th><th scope="col">优点</th><th scope="col">缺点</th><th scope="col">适用场景</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">带失效检查的增量综合</th><td>复用已确认文章，更新范围较小，可展示针对新增证据的 Diff。</td><td>需维护来源依赖、过期处理与重建，可能累积摘要漂移。</td><td>主题材料持续增长、文章需要长期维护，且已有可靠来源映射。</td></tr>
+          <tr><th scope="row">每次全量重新生成</th><td>逻辑清楚，容易重新考虑全部当前证据，是重要质量基线。</td><td>长主题重复输入成本较高，全文表述可能大幅变化；超长资料还需分层综合。</td><td>主题资料较少、更新不频繁，或增量结果失效后的重建。</td></tr>
+          <tr><th scope="row">按需检索回答，不维护文章</th><td>无需 Wiki 版本和依赖更新，可只为当前问题取证。</td><td>每次问题重新综合，缺少稳定可浏览的主题文章，回答范围随问题变化。</td><td>主要需要问答、主题沉淀需求较弱的产品。</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>方法选择分析：</strong>长期可浏览的主题文章能帮助复用知识，也与现有增量维护一致。但应先以小规模全量综合验证价值；只有更新频率与资料量带来实际重复成本，再实现增量和失效重建，不能预先承诺节省比例。</p>
+    <p class="evidence"><strong>个人复现面试参考：</strong>我比较了全量重写、增量更新和只做检索问答。产品希望形成稳定的主题文章，所以先验证全量综合，再考虑增量降低重复输入。增量的难点是来源变更与摘要漂移，因此会保存来源版本、允许回读旧证据，并在依赖失效时重建和重新审批。</p>
+    <p><strong>个人复现完成后的简历模板：</strong>实现带来源版本追踪的主题 Wiki 综合，基于资料变更生成增量 Proposal，并在引用失效时重建；在［N］轮固定更新实验中，相比全量基线输入 Token 变化［实测值］，引用支持率为［X］，旧结论残留率为［Y］。</p>
+  </section>
+
+  <section class="case" id="atomic-reports">
+    <div class="case-head">
+      <p class="stage">亮点三 · 主动知识回顾</p>
+      <h2>结合新资料与历史上下文的定期回顾</h2>
+    </div>
+    <p><strong>Atomic 已公开：</strong><a class="reference-link" href="https://atomicapp.ai/concepts/daily-briefings/" target="_blank" rel="noopener noreferrer">Daily Briefings 文档</a>说明每日简报已泛化为 Reports；<a class="reference-link" href="https://atomicapp.ai/concepts/reports/" target="_blank" rel="noopener noreferrer">Reports 文档</a>区分本期 source scope、可搜索的 context scope 与引用策略，包含矛盾检查、未解决问题跟踪等模板，结果作为带引用的报告型 atom 保存。这比定时总结最近几条笔记提供了更明确的知识复用机制。</p>
+    <dl>
+      <dt>S · 情境</dt><dd>用户保存后经常遗忘，旧想法也可能被新材料补充或推翻。单纯推送“本周新增摘要”未必能帮助当前项目，反复推送还会造成干扰。</dd>
+      <dt>T · 任务</dt><dd>在用户选择的项目和时间范围内，将新材料与历史知识联系起来，给出少量值得重看的内容，并明确为何相关、来源是什么。</dd>
+      <dt>A · 公开实现</dt><dd>Reports 保存 prompt、source scope、context scope、引用策略和 cron / 时区；Agent 通过搜索与读取研究资料，输出 kind=report 的结果及引用。默认来源窗口为 SinceLastRun，默认 SourceOnly；启用 SourceAndContext 才可引用历史检索结果。运行账本和水位记录用于调度与重试。</dd>
+      <dt>R · 能力与待测结果</dt><dd>已确认 Daily Briefing 作为普通报告运行，以及报告结果、来源和引用的事务保存。尚无本轮实测的调度成功率或用户收益；个人复现应验证重叠执行、截断遗漏和重启恢复，并记录引用支持率、有用率及重复比例。</dd>
+    </dl>
+    <article class="choice-group">
+      <h3>个人复现与改进建议</h3>
+      <ol class="implementation-steps">
+        <li>先实现应用内“生成周回顾”，复用搜索和读取工具；用户明确当前项目或主题。支持“无值得回顾的内容”，每次最多三条，说明关联理由及新、旧来源。</li>
+        <li>Report 定义保存 prompt、sourceScope、contextScope、schedule、timezone 与引用策略；默认 source 取本期已确认资料，context 限定当前项目的历史笔记。由后端执行范围过滤，排除派生报告作为默认输入，避免报告再次总结自己。</li>
+        <li>以持久化摄取事件序号界定本期区间，运行开始冻结上界与来源版本；保存本期来源清单及逐条处理状态。预算放不下全部资料时分批处理，未纳入的来源继续待处理；只有本期全部来源已消费或经明确规则跳过，才推进游标。失败沿用原窗口重试；若没有事件序列，时间戳方案需补充重叠窗口与来源去重，处理迟到数据。</li>
+        <li>为 reportId、配置版本和调度窗口建立唯一运行记录，用 lease 防止后台与手动运行重复执行；保存 planned / running / succeeded / failed 等状态。下一次启动扫描未完成运行，模型调用与结果提交之间按运行 ID 幂等关联。</li>
+        <li>每个阶段读取片段或完整笔记时都校验 source / context 范围，不只在搜索时过滤；否则模型拿到范围外 ID 后可能通过 readNote 绕过检索范围。报告是独立的派生草稿，不自动改写已批准的 Wiki；用户采纳其中的知识修订时，仍进入 Proposal 审批。引用允许历史上下文时，保存引用片段与版本，区分“本期变化”和“历史依据”。</li>
+        <li>先把反馈限制为有用、暂不相关、已处理，并记录最近展示的 sourceId 与主题，避免重复。生成结果和通知投递分别保存状态；默认仅在应用内展示，外部通知渠道及权限按后续明确需求接入。</li>
+      </ol>
+      <p class="muted">本地定时执行依赖进程持续运行或系统任务唤醒；仅有浏览器页面不能保证关闭后照常执行。应用停机后要定义补跑或合并窗口策略，用户看到的“已生成”和“已送达”也必须区分。</p>
+    </article>
+    <div class="comparison-wrap" tabindex="0" role="region" aria-label="主动回顾方法比较">
+      <table class="comparison">
+        <caption>其他方法、优劣与选择</caption>
+        <thead><tr><th scope="col">方法</th><th scope="col">优点</th><th scope="col">缺点</th><th scope="col">适用场景</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">新资料 + 历史范围检索</th><td>能说明知识变化、发现旧问题的新线索；输入范围与引用范围可控制。</td><td>需额外检索、引用与任务状态管理；相关性判断与生成成本需要评测。</td><td>有持续项目，希望旧知识参与当前工作的用户。</td></tr>
+          <tr><th scope="row">固定周期总结新增笔记</th><td>实现与成本相对可控，便于确认本期记录了什么。</td><td>较难挖掘历史联系；新增很多但不相关时可能增加阅读负担。</td><td>以信息摄取回顾、日报或周报为主的需求。</td></tr>
+          <tr><th scope="row">规则式间隔复习</th><td>可按时间、访问频率和用户标记调度，不必每次调用模型；容易解释提醒原因。</td><td>需要用户标记或记忆目标，难以直接发现新旧资料之间的语义变化。</td><td>以知识记忆、课程复习或固定待办为主的场景。</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>方法选择分析：</strong>最初产品目标是让已存知识在当前任务中重新发挥作用，因此需要历史检索。先比较“新增摘要”和“新旧关联回顾”的真实有用率；如果用户主要想复习知识点，规则式调度可能更合适。先做一个报告类型，不建设通用研究平台。</p>
+    <p class="evidence"><strong>个人复现面试参考：</strong>我希望推送能解释“为什么这条旧笔记现在有用”。所以将本期输入与历史检索范围分开，并保留引用。比较过新增摘要和间隔复习：前者适合盘点，后者适合记忆。这个方向需要同时验证用户价值和运行可靠性，因此会记录反馈、重复率，以及中断后是否遗漏或重复生成。</p>
+    <p><strong>个人复现完成后的简历模板：</strong>设计面向当前项目的定期知识回顾，将本期资料与历史检索分开建模，支持带引用的观点变化和未解决问题提示；通过运行窗口、幂等记录与失败恢复管理调度，在［周期 / 参与人数］的使用记录中，有用回顾占比［X］，重复内容比例为［Y］。</p>
+  </section>
+
+  <section class="case" id="atomic-mcp">
+    <div class="case-head">
+      <p class="stage">亮点四 · 跨 Agent 知识复用</p>
+      <h2>通过 MCP 提供受控的长期记忆接口</h2>
+    </div>
+    <p><strong>Atomic 已公开：</strong><a class="reference-link" href="https://atomicapp.ai/guides/mcp-server/" target="_blank" rel="noopener noreferrer">MCP Server 文档</a>列出 semantic_search、read_atom、create_atom、ingest_url、update_atom，并提供本地 stdio-to-HTTP bridge 与远程 HTTP 接入。文档列举并非源码的完整工具集；个人复现若增加审批链，应把它标为额外设计。</p>
+    <dl>
+      <dt>S · 情境</dt><dd>知识分散在应用界面与不同 Agent 会话中，用户需要重复提供背景；直接开放文件写入会绕过应用中的来源、审批和版本约束。</dd>
+      <dt>T · 任务</dt><dd>让外部 Agent 能搜索和读取同一知识库、提出变更，并确保所有入口遵循相同的权限与版本规则。</dd>
+      <dt>A · 公开实现</dt><dd>通过 MCP router 暴露搜索、读取、列表、创建、更新等工具，调用核心业务服务；文档提供本地 stdio-to-HTTP bridge 和远程 HTTP 接入。更新工具使用旧内容检查后直接变更，不能将其描述为统一的人工提案审批架构。</dd>
+      <dt>R · 能力与待测结果</dt><dd>已确认外部 Agent 搜索和读写知识的协议与工具实现。本轮未运行客户端或全面核验传输认证；个人复现需测客户端兼容性、分页读取、旧内容冲突和权限边界，安全的提案审批可作为额外改进。</dd>
+    </dl>
+    <article class="choice-group">
+      <h3>个人复现与改进建议</h3>
+      <ol class="implementation-steps">
+        <li>抽取 searchNotes、readNote、createProposal、applyApprovedProposal 等服务，由 Web 和 MCP 共用；MCP 工具只提供前几项，不能调用应用审批或以参数自报“已批准”。</li>
+        <li>只读工具返回真实 noteId、sourceId、版本、片段及分页游标；projectId / topicId 过滤、读取条数和内容长度限制由服务执行，不能依赖客户端提示词。</li>
+        <li>提交资料先保存 raw source，变更工具返回 proposalId、目标版本和在应用中查看审批的入口；用户批准前，知识正文保持原状。批准接口校验请求来源和真实用户操作，避免外部工具直接请求同一接口绕过审批。</li>
+        <li>本地优先验证 stdio 接入，复用同一版本与写入服务；服务可另开进程或通过本地受控连接调用。远程 HTTP 是后续选择，需要认证、传输保护及令牌隔离，不能因暴露在 localhost 就视为已授权。</li>
+        <li>模型得到的内容仍属于不可信资料；工具结果只提供数据与引用，不让笔记文本授予权限。审计记录包含入口、clientId、runId 和 proposalId，便于定位哪次外部调用提出了变更。</li>
+      </ol>
+      <p class="muted">MCP 解决工具发现与调用协议，不自动保证 Agent 会先搜索，也不自动提供记忆检索质量。可测试这些行为，但不能把协议接通直接写成“拥有可靠长期记忆”。</p>
+    </article>
+    <div class="comparison-wrap" tabindex="0" role="region" aria-label="外部 Agent 知识接入方法比较">
+      <table class="comparison">
+        <caption>其他方法、优劣与选择</caption>
+        <thead><tr><th scope="col">方法</th><th scope="col">优点</th><th scope="col">缺点</th><th scope="col">适用场景</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">MCP 受控工具适配</th><td>支持标准工具发现，便于兼容多个 MCP 客户端，并统一业务约束。</td><td>需维护协议、客户端兼容性、认证和工具结果规范；仍有检索与使用质量问题。</td><td>希望不同 Agent 共用知识服务且客户端支持 MCP。</td></tr>
+          <tr><th scope="row">自定义 REST API / SDK</th><td>接口契约可精细控制，适合现有 Web 服务和特定程序调用。</td><td>不同 Agent 客户端需要单独封装工具，接入方式可能分散。</td><td>固定客户端、应用间集成或内部自动化流程。</td></tr>
+          <tr><th scope="row">共享 Markdown 目录</th><td>接入直观，无协议适配，通用文件 Agent 可以立即读取。</td><td>直接写入容易绕过审批、版本和索引维护；暴露目录范围较大。</td><td>只读共享或已设计导入与审核流程的文件工作流。</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>方法选择分析：</strong>若实际使用多个支持 MCP 的 Agent，协议适配能减少重复接入；只有一个客户端时 REST 即可。可以先给共享目录只读访问，但不能同时默认允许外部直接改正文。远程接入、URL 抓取和多用户权限均不作为本轮候选的必要条件。</p>
+    <p class="evidence"><strong>个人复现面试参考：</strong>考虑过 REST 封装与共享笔记目录。选择 MCP 的前提是多个 Agent 客户端需要复用工具；Web 和 MCP 会共用知识服务，而不是各写一套存储逻辑。外部 Agent 可以提出变更，但审批仍留在应用内，直接发工具请求也不能跳过版本和授权检查。</p>
+    <p><strong>个人复现完成后的简历模板：</strong>通过 MCP 暴露检索、读取与变更提案工具，使［客户端范围］复用本地知识库；统一 Web / MCP 业务服务与审批边界，在［N］项跨入口及越权测试中，通过［通过数］项，未经批准的正文写入为［X］次。</p>
+  </section>
+
+  <section class="case" id="atomic-resume-selection">
+    <div class="case-head">
+      <p class="stage">个人复现完成后的简历组织</p>
+      <h2>独立的四条简历主线</h2>
+    </div>
+    <p>下面仅作为实际复现或贡献完成后的表述模板。使用时写清个人项目名称、与 Atomic 的关系及自己负责的范围；在本轮研究阶段只能描述已核实的架构分析，不能使用完成时的实现表述。</p>
+    <ol class="implementation-steps">
+      <li><strong>异步知识处理：</strong>实现原子笔记的分块、Embedding 和结构化标签流水线，区分人工与自动标签；补充任务持久化、幂等与版本检查，在［N］组失败及连续更新场景中通过［X］组。</li>
+      <li><strong>主题 Wiki：</strong>实现按标签选源、带引用的主题综合与增量变更提案，校验基础文章版本；对照全量基线测得 Token 变化［X］、引用支持率［Y］，来源失效处理以实际实现为准。</li>
+      <li><strong>定期报告：</strong>实现来源范围与上下文范围分离的报告调度，支持引用策略及运行恢复；在［使用周期 / 案例量］中记录成功率［X］、有用率［Y］与重复比例［Z］。</li>
+      <li><strong>MCP 接入：</strong>通过标准工具接口使［客户端范围］检索与维护知识，复用统一业务服务；完成［N］项兼容、版本冲突与权限测试。新增审批机制时注明属于个人改进。</li>
+    </ol>
+    <p class="evidence"><strong>实施建议：</strong>先复现单条输入到标签、检索和 Wiki 的闭环，再选择报告或 MCP 深入。各亮点均附两种替代方案；选型理由是本页的分析，实际实施后补充自己的证据和取舍。</p>
+  </section>
+
+  <section class="case" id="atomic-code-evidence">
+    <div class="case-head">
+      <p class="stage">源码补充 · 固定提交 983bea6 · 只读核查</p>
+      <h2>源码中确认的方法与边界</h2>
+    </div>
+    <p>以下证据固定到 Atomic 提交 <code>983bea6baf449d060514c94b3b15b5f85f77ba9b</code>，与后续官网更新可能存在差异。本轮没有运行项目或测试；此处记录已读实现，不构成完整代码审计。</p>
+    <article class="choice-group">
+      <h3>Wiki：标签选源、分节合并与基础版本检查</h3>
+      <p>默认选源策略按标签及其后代限定 captured 原始资料，以标签向量中心为查询排序片段，并受 Token 预算约束；另有 agentic 选源路径。默认增量路径通过资料创建时间晚于文章更新时间筛选新增内容，提案存储文章基础 ID 和更新时间，批准时检查文章是否已变更。</p>
+      <p>这证明存在新资料增量综合与过期提案检查，但默认查询不能覆盖旧来源编辑、删除或后来新增标签关联等全部依赖变化。引用保存 atom ID、chunk index 和 excerpt；编号映射有效也不证明观点得到原文支持。前面个人复现部分提出的来源版本失效、回读证据和重建策略，属于额外改进建议。</p>
+      <p class="muted">源码：<a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/storage/sqlite/wiki.rs#L141" target="_blank" rel="noopener noreferrer">标签范围与增量选源</a> · <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/wiki/centroid.rs#L69" target="_blank" rel="noopener noreferrer">向量中心选源</a> · <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/lib.rs#L2126" target="_blank" rel="noopener noreferrer">提案与批准流程</a> · <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/wiki/mod.rs#L431" target="_blank" rel="noopener noreferrer">引用映射与综合逻辑</a>。</p>
+    </article>
+    <article class="choice-group">
+      <h3>Reports：双范围、引用策略与派生资料过滤</h3>
+      <p>默认 Daily Briefing 的来源窗口是 SinceLastRun，source 和 context 默认仅含 captured 原始资料；默认引用策略为 SourceOnly。配置为 SourceAndContext 后，历史检索结果才可注册为引用。上下文搜索排除本批来源及当前报告自己的历史结果；自定义配置仍可能明确允许其他派生报告。</p>
+      <p>因此不能把“所有报告都可引用旧资料”或“所有入口永远排除报告”作为默认能力。已读实现主要在选源和搜索时约束范围，read-by-ID 工具未见同等范围复查；个人复现可以在搜索、读取、引用三个环节统一校验。</p>
+      <p class="muted">源码：<a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/reports/seed.rs#L120" target="_blank" rel="noopener noreferrer">默认报告配置</a> · <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/reports/scope.rs#L64" target="_blank" rel="noopener noreferrer">范围及循环引用过滤</a> · <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/reports/agentic.rs#L508" target="_blank" rel="noopener noreferrer">研究工具和引用策略</a>。</p>
+    </article>
+    <article class="choice-group">
+      <h3>调度：可借鉴运行账本，补齐预算截断与中断处理</h3>
+      <p>报告调度使用 cron 与时区，运行通过账本领取；执行开始时取时间作为后续水位，成功或空来源时推进，失败不推进。报告正文、来源和引用在一个存储事务内写入，但水位更新与账本完成分开执行，不能称为中断下恰好一次。</p>
+      <p>源码按数量和 Token 上限截断候选，而成功后推进整体水位，未见被截断资料的逐条消费记录。前面个人改进方案增加来源清单、分批和待处理状态，避免以一次生成成功代替整个窗口处理完成。</p>
+      <p class="muted">源码：<a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/reports/runner.rs#L48" target="_blank" rel="noopener noreferrer">执行与水位更新</a> · <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/reports/schedule.rs#L19" target="_blank" rel="noopener noreferrer">调度与补跑</a> · <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/storage/sqlite/reports.rs#L484" target="_blank" rel="noopener noreferrer">报告结果事务</a>。</p>
+    </article>
+    <article class="choice-group">
+      <h3>自动标签与 MCP：可复用思路，不照搬权限</h3>
+      <p>标签抽取结合允许的顶层分类与现有常用子标签，记录 auto / manual 来源，并保留已有人工标签。由此可以借鉴受限结构化分类；未确认独立的实体消歧、别名归并或事实三元组抽取，不把它们写成 Atomic 已有能力。</p>
+      <p>MCP 源码工具多于文档列举的五个，实际包含搜索、读取、列表、报告查询及更新等；更新工具有旧内容检查并直接调用业务更新。前面的个人改进方案则仅允许外部 Agent 提交提案，把批准和执行放在独立应用流程中。</p>
+      <p class="muted">源码：<a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-core/src/extraction.rs#L396" target="_blank" rel="noopener noreferrer">标签候选与人工标签处理</a> · <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/crates/atomic-server/src/mcp/server.rs#L149" target="_blank" rel="noopener noreferrer">MCP 工具实现</a>。</p>
+    </article>
+    <p class="evidence"><strong>技术栈与许可：</strong>Atomic 使用 Rust 核心 / 服务端、React 和 SQLite + sqlite-vec；个人复现可复用这些组件，也可在保留机制的前提下另选技术栈，需明确实际采用的方案。固定提交的 <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/LICENSE" target="_blank" rel="noopener noreferrer">LICENSE</a> 为 MIT，版权为 Kenneth Bergquist（2025）。若后续复用源码或实质部分，需要保留版权和许可声明；本轮仅研究机制，未复制代码。项目架构入口见 <a class="reference-link" href="https://github.com/kenforthewin/atomic/blob/983bea6baf449d060514c94b3b15b5f85f77ba9b/README.md" target="_blank" rel="noopener noreferrer">README</a>。</p>
+  </section>
+
+  <section class="case" id="atomic-sources">
+    <div class="case-head">
+      <p class="stage">参考资料 · 官方公开文档</p>
+      <h2>Atomic 资料与证据范围</h2>
+    </div>
+    <p>2026-10-25 读取以下公开页面。已核查页面文字与接口说明；本轮未安装 Atomic、未登录产品、未验证其在线交互或运行效果。官网没有公开的设计细节不能当作已经确认的内部实现。</p>
+    <ul class="reference-list">
+      <li><a class="reference-link" href="https://atomicapp.ai/" target="_blank" rel="noopener noreferrer">Atomic 首页</a>：产品定位、主要能力与自托管 / 云端入口。</li>
+      <li><a class="reference-link" href="https://atomicapp.ai/getting-started/" target="_blank" rel="noopener noreferrer">Getting Started</a>：桌面、自托管及云端的核心引擎与接入方式。</li>
+      <li><a class="reference-link" href="https://atomicapp.ai/concepts/atoms/" target="_blank" rel="noopener noreferrer">Atoms</a>、<a class="reference-link" href="https://atomicapp.ai/concepts/tags/" target="_blank" rel="noopener noreferrer">Tags</a>：异步处理、状态、标签与范围。</li>
+      <li><a class="reference-link" href="https://atomicapp.ai/concepts/wiki-synthesis/" target="_blank" rel="noopener noreferrer">Wiki Synthesis</a>：增量综合、引用、提案和历史版本。</li>
+      <li><a class="reference-link" href="https://atomicapp.ai/concepts/semantic-search/" target="_blank" rel="noopener noreferrer">Semantic Search</a>、<a class="reference-link" href="https://atomicapp.ai/concepts/chat/" target="_blank" rel="noopener noreferrer">Chat</a>：检索模式、主题范围与流式工具过程。</li>
+      <li><a class="reference-link" href="https://atomicapp.ai/concepts/daily-briefings/" target="_blank" rel="noopener noreferrer">Daily Briefings</a>、<a class="reference-link" href="https://atomicapp.ai/concepts/reports/" target="_blank" rel="noopener noreferrer">Reports</a>：报告模型、两类资料范围、调度与引用策略。</li>
+      <li><a class="reference-link" href="https://atomicapp.ai/guides/mcp-server/" target="_blank" rel="noopener noreferrer">MCP Server</a>、<a class="reference-link" href="https://atomicapp.ai/concepts/canvas/" target="_blank" rel="noopener noreferrer">Canvas</a>：外部 Agent 工具与可视化能力说明。</li>
+      <li><a class="reference-link" href="https://github.com/kenforthewin/atomic" target="_blank" rel="noopener noreferrer">Atomic GitHub 仓库</a>：官方代码入口。本文的个人复现与改进建议为独立设计，本轮未复制源码。</li>
+    </ul>
+  </section>
+
+  <footer>依据：Atomic 官方公开文档与固定提交 983bea6 的源码研究。核查于 2026-10-25；尚未运行产品、完成个人复现或测出效果指标。</footer>
+</main>
+</body>
+</html>
