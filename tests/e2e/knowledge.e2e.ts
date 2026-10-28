@@ -278,6 +278,15 @@ test('API 拒绝跨站、缺失或伪造 CSRF、非法版本及模型直接写�
     expect(response.status()).toBe(403);
     expect(await response.json()).toMatchObject({ code: 'CSRF' });
   }
+  for (const endpoint of endpoints) {
+    const headers = { origin, 'x-csrf-token': client.token, 'content-type': 'application/json' };
+    const invalidJson = await request.post(endpoint.url, { headers, data: Buffer.from('{') });
+    expect(invalidJson.status()).toBe(400);
+    expect(await invalidJson.json()).toMatchObject({ code: 'INVALID_INPUT' });
+    const oversized = await request.post(endpoint.url, { headers, data: Buffer.from(JSON.stringify({ message: 'x'.repeat(100_001) })) });
+    expect(oversized.status()).toBe(413);
+    expect(await oversized.json()).toMatchObject({ code: 'INPUT_TOO_LARGE' });
+  }
   const contentType = await request.post('/api/chat', { headers: { origin, 'x-csrf-token': client.token, 'content-type': 'text/plain' }, data: 'not json' });
   expect(contentType.status()).toBe(415);
   expect(await contentType.json()).toMatchObject({ code: 'CONTENT_TYPE' });
@@ -288,8 +297,9 @@ test('API 拒绝跨站、缺失或伪造 CSRF、非法版本及模型直接写�
   expect(wrongRestore.status()).toBe(409);
   expect(await wrongRestore.json()).toMatchObject({ code: 'VERSION_CONFLICT' });
   const directWrite = await client.post('/api/proposals', { action: 'CREATE', proposedTitle: 'Forbidden', proposedContent: '禁止绕过 Agent 与审批。' });
-  expect(directWrite.status()).toBe(404);
-  expect(await directWrite.json()).toMatchObject({ code: 'NOT_FOUND' });
+  expect(directWrite.status()).toBe(405);
+  const unknownRoute = await request.get('/api/unknown-route');
+  expect(unknownRoute.status()).toBe(404);
   const invalidId = await request.get('/api/sources/not-a-trusted-uuid');
   expect(invalidId.status()).toBe(400);
   expect(await invalidId.json()).toMatchObject({ code: 'INVALID_ID' });

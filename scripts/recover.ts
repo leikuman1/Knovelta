@@ -1,6 +1,6 @@
-import { Store } from '../src/lib/store';
+import { dataDirectory, Store } from '../src/lib/store';
 
-const store = new Store(process.env.MEMOAGENT_DATA_DIR || './data');
+const store = new Store(dataDirectory());
 try {
   if (store.recoveryErrors.length) {
     for (const message of store.recoveryErrors) console.error(message);

@@ -296,7 +296,10 @@ export class Store {
   }
 }
 
+export function dataDirectory() {
+  return path.resolve(process.env.MEMOAGENT_DATA_DIR || './workspace');
+}
 const globalStore = globalThis as typeof globalThis & { memoStore?: Store };
 export function getStore() {
-  return globalStore.memoStore ??= new Store(process.env.MEMOAGENT_DATA_DIR || './data');
+  return globalStore.memoStore ??= new Store(dataDirectory());
 }

@@ -36,7 +36,7 @@ async function main() {
     }
     await provider.close();
     clearTimeout(timer);
-    // Keep this run's isolated files for failure inspection; never touch ./data.
+    // Keep this run's isolated files for failure inspection; never touch the application workspace.
     process.exit(code);
   }
   process.once('SIGINT', () => { void stop(0); });

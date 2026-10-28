@@ -4,6 +4,7 @@ out/
 .env*
 !.env.example
 data/
+workspace/
 .test-data*/
 playwright-report/
 test-results/
@@ -13,4 +14,7 @@ coverage/
 *.tsbuildinfo
 *.log
 .DS_Store
-.claude/
+.claude/*
+!.claude/commands/
+.claude/commands/*
+!.claude/commands/daily-retro.md

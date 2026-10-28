@@ -38,7 +38,7 @@
 | Web UI | Next.js + TypeScript + shadcn/ui | 浏览器剪藏 / Obsidian 接入 |
 | Agent 编排 | Vercel AI SDK，负责流式对话与单 Agent 工具调用 | 按需增强工作流与长任务恢复 |
 | LLM | 通过 AI SDK 接入 OpenAI 兼容接口；`baseURL`、`apiKey`、`model` 环境变量配置 | 多模型实验与成本比较 |
-| 正文存储 | 本地 Markdown；文件夹 `data/raw/` 和 `data/wiki/` | 导入用户已有 Markdown |
+| 正文存储 | 本地 Markdown；文件夹 `workspace/raw/` 和 `workspace/wiki/` | 导入用户已有 Markdown |
 | 元数据 / 版本 | SQLite | 增量索引管理 |
 | 第一版检索 | SQLite FTS5 关键词检索 | BM25 / 向量混合召回 + RRF |
 | 向量存储 | 暂不强制 | LanceDB（可替换），Embedding 接口可配置 |
@@ -146,10 +146,10 @@
 | `related_notes` | `noteId`, `relatedNoteId`, `reason`, `createdAt` |
 | `agent_runs` | `id`, `input`, `intent`, `selectedTools`, `status`, `durationMs`, `createdAt` |
 
-**数据目录建议**：
+**数据目录建议**：默认使用项目根目录下的 `workspace/`，可通过 `MEMOAGENT_DATA_DIR` 指定其他目录。
 
 ```text
-data/
+workspace/
   raw/             # 原始输入，追加后不改写
   wiki/            # AI 整理生成的 Markdown
   versions/        # 修改前快照或版本内容

@@ -13,7 +13,10 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "recover": "tsx --env-file-if-exists=.env.local scripts/recover.ts",
-    "smoke": "tsx --env-file-if-exists=.env.local scripts/smoke.ts"
+    "smoke": "tsx --env-file-if-exists=.env.local scripts/smoke.ts",
+    "lessons:review": "tsx scripts/lessons.ts review",
+    "lessons:check": "tsx scripts/lessons.ts check",
+    "lessons:promote": "tsx scripts/lessons.ts promote"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "2.0.87",

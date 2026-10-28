@@ -15,7 +15,7 @@
    LLM_BASE_URL=https://你的服务地址/v1
    LLM_API_KEY=你的密钥
    LLM_MODEL=实际模型ID
-   MEMOAGENT_DATA_DIR=./data
+   MEMOAGENT_DATA_DIR=./workspace
    ```
 
    接口必须支持 OpenAI Chat Completions、流式输出及工具调用。`/v1` 是否需要由服务商决定。配置仅在服务端使用，`.env.local` 与数据目录均被 Git 忽略。不要提交密钥。
@@ -39,8 +39,10 @@
 
 ## 数据与恢复
 
+默认工作目录为项目根目录下的 `workspace/`，首次运行自动创建。应用与恢复脚本共用 `MEMOAGENT_DATA_DIR` 配置；相对路径以启动命令所在目录为基准。切换目录不会自动迁移旧 `data/` 中的数据；已有配置如需使用新默认值，请改为 `MEMOAGENT_DATA_DIR=./workspace` 并重启应用。
+
 ```text
-data/
+workspace/
   raw/                原始输入，只追加
   wiki/               最新已提交整理正文
   versions/           各已提交版本的不可变 Markdown 快照
@@ -84,6 +86,12 @@ npm run smoke
 ```
 
 该脚本使用隔离临时数据目录，会调用你配置的模型并产生相应费用，只生成提案和查询，不自动批准正文。真实模型的完整新增、补充、冲突和问答需按上方 UI 演示验收。自动化使用确定性测试接口通过，不能据此声称真实模型准确率。
+
+## 开发经验与每日复盘
+
+开发与 Review 前读取 [代码规范](docs/code-standards.md) 和相关 [经验](LESSONS.md)。执行 `npm run lessons:review` 收集当天 Git 与修复线索，由开发者或 Coding Agent 按 [工作流](docs/lessons-workflow.md) 核对测试证据、合并同类问题；无新发现不改文件。Claude Code 可使用 `/daily-retro [YYYY-MM-DD]`。
+
+`npm run lessons:check` 校验去重、日期、引用和容量；至少三个不同实际发生日期且证据充分时，用 `npm run lessons:promote -- L编号` 晋升。内置每日调度仅在当前 Claude Code 会话运行且空闲时有效，最多七天；退出后使用手动入口或重新创建任务，不依赖云端密钥。
 
 ## 当前边界
 

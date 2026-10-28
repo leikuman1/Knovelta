@@ -114,7 +114,7 @@ tests/               # 单元、集成及端到端测试
   unit/
   integration/
   e2e/
-data/
+workspace/
   raw/
   wiki/
   versions/
@@ -122,7 +122,7 @@ data/
   memoagent.sqlite
 ```
 
-`data/staging/` 仅保存提交过程中的临时文件，不作为知识源；临时文件和目标文件位于同一文件系统。运行数据、临时文件和环境密钥不纳入版本控制，测试使用独立临时目录。
+`workspace/staging/` 仅保存提交过程中的临时文件，不作为知识源；临时文件和目标文件位于同一文件系统。运行数据、临时文件和环境密钥不纳入版本控制，测试使用独立临时目录。
 
 ## 5. 数据模型与不变量
 
@@ -387,7 +387,7 @@ T01–T10 对应开发规格 9.1 的核心场景，必须有自动化覆盖。T0
 LLM_BASE_URL=
 LLM_API_KEY=
 LLM_MODEL=
-MEMOAGENT_DATA_DIR=./data
+MEMOAGENT_DATA_DIR=./workspace
 ```
 
 配置仅在服务端读取，禁止使用可暴露给浏览器的密钥变量前缀。模型配置缺失不应使历史笔记不可读；创建新的 Agent 运行时再返回清晰的配置错误。
