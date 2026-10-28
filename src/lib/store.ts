@@ -9,6 +9,11 @@ import type { AuditEvent, Dependency, Note, NoteSummary, Proposal, ProposalDetai
 
 export const hash = (text: string) => createHash('sha256').update(text).digest('hex');
 const now = () => new Date().toISOString();
+function syncDirectory(dir: string) {
+  if (process.platform === 'win32') return;
+  const fd = openSync(dir, 'r');
+  try { fsyncSync(fd); } finally { closeSync(fd); }
+}
 type Operation = { id: string; proposalId: string; noteId: string; fromVersion: number; toVersion: number; beforeHash: string | null; afterHash: string; state: string };
 type ProposalRow = Omit<Proposal, 'sourceIds' | 'dependencies'> & { sourceIds: string; dependencies: string };
 export type FaultPoint = 'source_saved' | 'prepared' | 'snapshot_written' | 'before_replace' | 'after_replace' | 'before_db_commit' | 'after_db_commit';
@@ -24,6 +29,7 @@ export class Store {
       mkdirSync(path.join(/* turbopackIgnore: true */ this.root, dir), { recursive: true });
       if (lstatSync(path.join(/* turbopackIgnore: true */ this.root, dir)).isSymbolicLink()) throw new AppError('UNSAFE_PATH', '数据目录不能是符号链接');
     }
+    syncDirectory(this.root);
     this.db = new Database(path.join(this.root, 'memoagent.sqlite'));
     this.db.pragma('foreign_keys = ON');
     this.db.pragma('journal_mode = WAL');
@@ -46,10 +52,11 @@ export class Store {
   private durableCreate(file: string, content: string) {
     if (existsSync(file)) {
       if (hash(readFileSync(file, 'utf8')) !== hash(content)) throw new AppError('FILE_CONFLICT', '文件内容与预期不一致', 409);
-      return;
+    } else {
+      const fd = openSync(file, 'wx');
+      try { writeFileSync(fd, content, 'utf8'); fsyncSync(fd); } finally { closeSync(fd); }
     }
-    const fd = openSync(file, 'wx');
-    try { writeFileSync(fd, content, 'utf8'); fsyncSync(fd); } finally { closeSync(fd); }
+    syncDirectory(path.dirname(file));
   }
   private audit(eventType: string, actor: string, detail: unknown, noteId: string | null = null, proposalId: string | null = null, operationId: string | null = null) {
     this.db.prepare('INSERT INTO audit_events(eventType,actor,detail,noteId,proposalId,operationId,createdAt) VALUES (?,?,?,?,?,?,?)')
@@ -215,6 +222,8 @@ export class Store {
       this.fault?.('before_replace');
       renameSync(staging, wiki);
     }
+    syncDirectory(path.join(this.root, 'wiki'));
+    syncDirectory(path.join(this.root, 'staging'));
     this.fault?.('after_replace');
     this.db.prepare("UPDATE write_operations SET state='file_replaced' WHERE id=?").run(op.id);
     this.db.transaction(() => {
@@ -247,7 +256,9 @@ export class Store {
     const pending = this.db.prepare("SELECT id,contentHash FROM sources WHERE status!='ready'").all() as { id: string; contentHash: string }[];
     for (const row of pending) {
       const text = this.read(this.file('raw', row.id));
-      this.db.prepare('UPDATE sources SET status=? WHERE id=?').run(text !== null && hash(text) === row.contentHash ? 'ready' : 'failed', row.id);
+      const ready = text !== null && hash(text) === row.contentHash;
+      if (ready) syncDirectory(path.join(this.root, 'raw'));
+      this.db.prepare('UPDATE sources SET status=? WHERE id=?').run(ready ? 'ready' : 'failed', row.id);
     }
     const ops = this.db.prepare("SELECT * FROM write_operations WHERE state IN ('prepared','file_replaced','needs_recovery') ORDER BY createdAt").all() as Operation[];
     for (const op of ops) {
@@ -270,9 +281,14 @@ export class Store {
           const staged = this.file('staging', randomUUID());
           this.durableCreate(staged, snapshot.content);
           renameSync(staged, wiki);
+          syncDirectory(path.dirname(wiki));
+          syncDirectory(path.dirname(staged));
           this.audit('wiki_restored', 'system', {}, note.id);
         } else if (hash(actual) !== note.contentHash) {
           this.recoveryErrors.push(`笔记 ${note.id} 存在外部修改，暂停提交并保留现场`);
+        } else {
+          syncDirectory(path.dirname(wiki));
+          syncDirectory(path.join(this.root, 'staging'));
         }
       } catch { this.recoveryErrors.push(`笔记 ${note.id} 快照异常，暂停提交`); }
     }

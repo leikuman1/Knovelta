@@ -1,7 +1,7 @@
 # MemoAgent Phase 1：MVP 开发与验收计划
 
 > 项目：AI Database / MemoAgent，AI 原生个人知识管理 Agent。  
-> 文档状态：开发计划，所有任务和验收结果均待实际实现后确认。  
+> 文档状态：Phase 1 初始开发计划，记录计划编写时的历史基线；文中“目前/当前尚无工程”等表述均指该基线，当前实现以仓库和 README 为准，验收结果以实际执行记录为准。  
 > 范围：本地、单用户、单 Agent，先完成可靠的端到端闭环。  
 > 主要依据：`MemoAgent_Development_Spec.md` 第 3–10、13 节及 `CLAUDE.md`。  
 

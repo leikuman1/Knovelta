@@ -38,6 +38,15 @@
 - 验证：迁移后路由类型生成、typecheck、lint、41 项单元/集成测试、生产构建和 5 项端到端测试通过；构建保留 dataDirectory 动态路径追踪警告。新增非法 JSON 用例首次因 Playwright 序列化字符串而失败，改用原始 Buffer 发送后通过，未因此修改生产逻辑。
 - 追溯位置：当前会话的路由讨论与用户实施确认；`src/app/api/**/route.ts`、`src/lib/http.ts`、`tests/e2e/knowledge.e2e.ts`。
 
+<a id="r20261028-validation"></a>
+## R20261028-validation · 经验校验静默遗漏输入与必填日期
+
+- 发生日期：2026-10-28，Asia/Shanghai。
+- 现象：CodeRabbit 指出 `matchAll` 只提取有效证据行；记录定位接受单引号和标题，但日期解析只识别双引号，缺日期也跳过比对。
+- 处理：逐行拒绝无效证据；统一记录定位与日期解析，要求日期存在且匹配，并限定当前记录边界。
+- 验证：24 项经验测试通过，覆盖混合错误项、三种锚点、缺失及不匹配日期、相邻记录隔离和 CRLF；完整本地检查为 typecheck、lint、lessons:check、55 项测试、build 和 5 项浏览器测试通过，2 项 POSIX 故障测试在 Windows 跳过，未据此声称 Linux 验证完成。
+- 追溯位置：PR #1 的评论 `discussion_r4397520323`、`discussion_r4397520327`；`scripts/lessons.ts`、`tests/lessons.test.ts`。
+
 ## 维护限制
 
 本文件最多保留 50 条事件、300 行。达到上限时先将已有 commit/CI 证据的摘要压缩为链接；确需保留的旧事件移到 `docs/lessons-archive/YYYY.md`，更新条目引用。不得删除仍被经验引用的证据，不能复制会话全文、个人笔记、密钥或环境变量值。

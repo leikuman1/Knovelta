@@ -13,7 +13,7 @@ function fixture(dates = ['2026-01-01']) {
   const records = dates.map((date, i) => `  - ${date} | record:docs/lessons-evidence.md#event-${i} | 独立事件 ${i}`);
   writeFileSync(path.join(root, 'LESSONS.md'), `# Lessons\n\n<!-- lesson:L001 -->\n<a id="l001"></a>\n### L001 · 测试经验\n\n- 问题键：\`test-problem\`\n- 规则：先验证状态。\n- 原因：时间不代表状态。\n- 证据：\n${records.join('\n')}\n<!-- /lesson -->\n\n## 已晋升索引\n`);
   writeFileSync(path.join(root, 'docs/code-standards.md'), '# 代码规范\n\n暂无符合条件的经验。\n');
-  writeFileSync(path.join(root, 'docs/lessons-evidence.md'), dates.map((_, i) => `<a id="event-${i}"></a>\n## R${i}\n说明`).join('\n'));
+  writeFileSync(path.join(root, 'docs/lessons-evidence.md'), dates.map((date, i) => `<a id="event-${i}"></a>\n## R${i}\n- 发生日期：${date}，Asia/Shanghai。\n说明`).join('\n'));
   return root;
 }
 function update(root: string, transform: (input: string) => string) {
@@ -66,6 +66,51 @@ describe('经验积累工作流', () => {
     const root = fixture();
     writeFileSync(path.join(root, 'docs/lessons-evidence.md'), '<a id="event-0"></a>\n## R0\n- 发生日期：2026-01-02，Asia/Shanghai。\n');
     expect(() => checkLessons(root)).toThrow('日期与事件记录不一致');
+  });
+  it.each([
+    '  - 2026-1-02 | record:docs/lessons-evidence.md#event-1 | 日期格式错误',
+    '  - 2026-01-02 record:docs/lessons-evidence.md#event-1 | 缺少分隔符',
+    '  - 2026-01-02 | record:docs/lessons-evidence.md#event-1 | ',
+    ' - 2026-01-02 | record:docs/lessons-evidence.md#event-1 | 缩进错误',
+  ])('有效证据不能掩盖错误项：%s', malformed => {
+    const root = fixture();
+    const original = readFileSync(path.join(root, 'LESSONS.md'), 'utf8');
+    const valid = '  - 2026-01-01 | record:docs/lessons-evidence.md#event-0 | 独立事件 0';
+    for (const mixed of [`${malformed}\n${valid}`, `${valid}\n${malformed}`]) {
+      const content = original.replace(valid, mixed);
+      expect(() => parseLessons(content)).toThrow('L001 证据项格式无效');
+      writeFileSync(path.join(root, 'LESSONS.md'), content);
+      expect(() => checkLessons(root)).toThrow('证据项格式无效');
+    }
+  });
+  it.each([
+    ['双引号', '<a id="event-0"></a>\n## R0'],
+    ['单引号', "<a id='event-0'></a>\n## R0"],
+    ['标题', '## Event 0'],
+  ])('%s 锚点必须有匹配的记录日期', (_, heading) => {
+    const root = fixture();
+    const file = path.join(root, 'docs/lessons-evidence.md');
+    writeFileSync(file, `${heading}\n说明\n`);
+    expect(() => checkLessons(root)).toThrow('事件记录缺少发生日期');
+    writeFileSync(file, `${heading}\n- 发生日期：2026-01-01，Asia/Shanghai。\n`);
+    expect(checkLessons(root).active).toBe(1);
+    writeFileSync(file, `${heading}\n- 发生日期：2026-01-02，Asia/Shanghai。\n`);
+    expect(() => checkLessons(root)).toThrow('日期与事件记录不一致');
+  });
+  it.each([
+    ['<a id="event-0"></a>\n## R0', '<a id="event-1"></a>\n## R1'],
+    ["<a id='event-0'></a>\n## R0", "<a id='event-1'></a>\n## R1"],
+    ['## Event 0', '## Event 1'],
+    ['<a id="event-0"></a>\n## R0', '## Event 1'],
+    ['## Event 0', "<a id='event-1'></a>\n## R1"],
+  ])('记录 %s 不能借用相邻记录 %s 的日期', (first, next) => {
+    const root = fixture();
+    writeFileSync(path.join(root, 'docs/lessons-evidence.md'), `${first}\n说明\n\n${next}\n- 发生日期：2026-01-01，Asia/Shanghai。\n`);
+    expect(() => checkLessons(root)).toThrow('事件记录缺少发生日期');
+  });
+  it('CRLF 证据行仍可解析', () => {
+    const root = fixture(); update(root, text => text.replaceAll('\n', '\r\n'));
+    expect(checkLessons(root).active).toBe(1);
   });
   it('按年归档同样受容量限制', () => {
     const root = fixture(); mkdirSync(path.join(root, 'docs/lessons-archive'));

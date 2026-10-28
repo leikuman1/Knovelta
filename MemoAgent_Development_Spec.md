@@ -146,7 +146,7 @@
 | `related_notes` | `noteId`, `relatedNoteId`, `reason`, `createdAt` |
 | `agent_runs` | `id`, `input`, `intent`, `selectedTools`, `status`, `durationMs`, `createdAt` |
 
-**数据目录建议**：默认使用项目根目录下的 `workspace/`，可通过 `MEMOAGENT_DATA_DIR` 指定其他目录。
+**数据目录建议**：默认使用启动命令当前目录下的 `workspace/`；在项目目录启动时即为项目内的 `workspace/`，可通过 `MEMOAGENT_DATA_DIR` 指定其他目录。
 
 ```text
 workspace/

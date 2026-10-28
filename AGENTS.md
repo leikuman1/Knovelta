@@ -12,4 +12,4 @@
 
 ## 当前项目边界
 
-仅推进 Phase 1，单用户、单 Agent。Agent 使用 Vercel AI SDK，只能生成结构化 Proposal。Markdown 正文修改必须展示 Diff 并由用户批准，经受控后端检查版本后执行；原文只追加，保留来源、版本、审计和失败恢复。默认运行数据放 `workspace/`，不得提交。
+仅推进 Phase 1，单用户、单 Agent。Agent 使用 Vercel AI SDK，知识正文变更只能通过结构化 Proposal 请求，问答可返回带证据的文本。Markdown 正文修改必须展示 Diff 并由用户批准，经受控后端检查版本后执行；原文只追加，保留来源、版本、审计和失败恢复。默认运行数据放 `workspace/`，不得提交。

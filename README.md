@@ -39,7 +39,7 @@
 
 ## 数据与恢复
 
-默认工作目录为项目根目录下的 `workspace/`，首次运行自动创建。应用与恢复脚本共用 `MEMOAGENT_DATA_DIR` 配置；相对路径以启动命令所在目录为基准。切换目录不会自动迁移旧 `data/` 中的数据；已有配置如需使用新默认值，请改为 `MEMOAGENT_DATA_DIR=./workspace` 并重启应用。
+默认工作目录为启动命令当前目录下的 `workspace/`；按本页步骤在项目目录启动时，即为项目内的 `workspace/`，首次运行自动创建。应用与恢复脚本共用 `MEMOAGENT_DATA_DIR` 配置；相对路径以启动命令所在目录为基准。切换目录不会自动迁移旧 `data/` 中的数据；已有配置如需使用新默认值，请改为 `MEMOAGENT_DATA_DIR=./workspace` 并重启应用。
 
 ```text
 workspace/

@@ -21,22 +21,43 @@ export function localDay(date = new Date()) {
 export function parseLessons(content: string): Lesson[] {
   const entries = [...content.matchAll(/<!-- lesson:(L\d{3}) -->\r?\n([\s\S]*?)<!-- \/lesson -->/g)].map(match => {
     const body = match[2];
+    const evidenceBody = body.match(/^- 证据：[ \t]*\r?\n([\s\S]*)/m)?.[1] ?? '';
+    const evidence = evidenceBody.split(/\r?\n/).filter(line => line.trim()).map(line => {
+      const item = line.match(/^  - (\d{4}-\d{2}-\d{2}) \| (\S+) \| (.+)$/);
+      if (!item) throw new Error(`${match[1]} 证据项格式无效：${line.trim()}`);
+      return { date: item[1], ref: item[2], summary: item[3].trim() };
+    });
     return {
       id: match[1], block: match[0],
       key: body.match(/^- 问题键：`([^`]+)`/m)?.[1] ?? '',
       rule: body.match(/^- 规则：(.+)/m)?.[1] ?? '',
       reason: body.match(/^- 原因：(.+)/m)?.[1] ?? '',
-      evidence: [...body.matchAll(/^  - (\d{4}-\d{2}-\d{2}) \| (\S+) \| (.+)$/gm)].map(m => ({ date: m[1], ref: m[2], summary: m[3].trim() })),
+      evidence,
     };
   });
   if ((content.match(/<!-- lesson:/g) ?? []).length !== entries.length || (content.match(/<!-- \/lesson -->/g) ?? []).length !== entries.length) throw new Error('经验条目标记不完整或编号无效');
   return entries;
 }
-function anchorExists(content: string, anchor: string) {
-  return content.includes(`id="${anchor}"`) || content.includes(`id='${anchor}'`) || content.split(/\r?\n/).some(line => {
-    if (!/^#{1,6} /.test(line)) return false;
-    return line.replace(/^#+ /, '').toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '-') === anchor;
-  });
+function recordSection(content: string, anchor: string) {
+  const lines = content.split(/\r?\n/);
+  const start = lines.findIndex(line => line.includes(`id="${anchor}"`) || line.includes(`id='${anchor}'`) || (
+    /^#{1,6} /.test(line) && line.replace(/^#+ /, '').toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '-') === anchor
+  ));
+  if (start < 0) return undefined;
+  // HTML 锚点后紧接的标题属于当前记录；后续同级标题或新锚点结束记录。
+  let title = start;
+  if (!/^#{1,6} /.test(lines[start])) {
+    title++;
+    while (title < lines.length && !lines[title].trim()) title++;
+  }
+  const level = lines[title]?.match(/^(#{1,6}) /)?.[1].length ?? 6;
+  let end = start + 1;
+  for (; end < lines.length; end++) {
+    if (/<a\b[^>]*\bid\s*=\s*(["'])[^"']+\1/i.test(lines[end])) break;
+    const heading = lines[end].match(/^(#{1,6}) /);
+    if (end !== title && heading && heading[1].length <= level) break;
+  }
+  return lines.slice(start, end).join('\n');
 }
 function validateRef(root: string, ref: string) {
   if (ref.startsWith('commit:')) {
@@ -53,7 +74,10 @@ function validateRef(root: string, ref: string) {
   const [file, anchor, extra] = ref.slice(7).split('#');
   if (!file?.startsWith('docs/') || !file.endsWith('.md') || !anchor || extra || file.includes('\\') || file.split('/').includes('..')) throw new Error(`无效记录路径 ${ref}`);
   const absolute = path.resolve(root, file);
-  if (!absolute.startsWith(`${path.resolve(root)}${path.sep}`) || !existsSync(absolute) || !anchorExists(readFileSync(absolute, 'utf8'), anchor)) throw new Error(`证据记录不存在 ${ref}`);
+  if (!absolute.startsWith(`${path.resolve(root)}${path.sep}`) || !existsSync(absolute)) throw new Error(`证据记录不存在 ${ref}`);
+  const record = recordSection(readFileSync(absolute, 'utf8'), anchor);
+  if (record === undefined) throw new Error(`证据记录不存在 ${ref}`);
+  return record;
 }
 export function checkLessons(root: string) {
   const activeText = text(root, 'LESSONS.md');
@@ -67,16 +91,15 @@ export function checkLessons(root: string) {
     const refs = new Set<string>();
     for (const e of entry.evidence) {
       if (!validDate(e.date) || e.date > localDay() || !e.summary) throw new Error(`${entry.id} 包含无效或未来事件日期`);
-      validateRef(root, e.ref);
-      if (e.ref.startsWith('record:')) {
-        const [file, anchor] = e.ref.slice(7).split('#');
-        const record = text(root, file).split(`id="${anchor}"`)[1]?.split(/\n<a id=/)[0];
-        const recordedDate = record?.match(/^- 发生日期：(\d{4}-\d{2}-\d{2})/m)?.[1];
-        if (recordedDate && recordedDate !== e.date) throw new Error(`${entry.id} 发生日期与事件记录不一致`);
-      }
+      const record = validateRef(root, e.ref);
       const referenceKey = e.ref.startsWith('commit:') ? `commit:${git(root, ['rev-parse', `${e.ref.slice(7)}^{commit}`])}` : e.ref;
       if (refs.has(referenceKey)) throw new Error(`${entry.id} 重复引用同一事件；复盘不增加复发次数`);
       refs.add(referenceKey);
+      if (record !== undefined) {
+        const recordedDate = record.match(/^- 发生日期：(\d{4}-\d{2}-\d{2})(?=[，。,\s]|$)/m)?.[1];
+        if (!recordedDate) throw new Error(`${entry.id} 事件记录缺少发生日期`);
+        if (recordedDate !== e.date) throw new Error(`${entry.id} 发生日期与事件记录不一致`);
+      }
     }
     if (standards.includes(entry) && new Set(entry.evidence.map(e => e.date)).size < 3) throw new Error(`${entry.id} 不足三个不同发生日期，不能晋升`);
   }
