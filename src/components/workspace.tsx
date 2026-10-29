@@ -32,6 +32,7 @@ export default function Workspace() {
   const [mode, setMode] = useState<"chat" | "note">("chat");
   const [panel, setPanel] = useState<MobilePanel>("main");
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [desktopLayout, setDesktopLayout] = useState(false);
   const [reviewFilter, setReviewFilter] = useState<"pending" | "all">("pending");
   const [inspection, setInspection] = useState<Inspection | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -54,6 +55,13 @@ export default function Workspace() {
     return () => { clearTimeout(timer); controller.abort(); };
   }, [query, notesRevision]);
 
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1200px)");
+    const update = () => setDesktopLayout(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   useEffect(() => () => streamController.current?.abort(), []);
   useEffect(() => {
     if (followStream.current && transcript.current) transcript.current.scrollTop = turns.length ? transcript.current.scrollHeight : 0;
@@ -66,6 +74,7 @@ export default function Workspace() {
   const blocked = !!session?.recoveryErrors.length;
   const canSend = !!session?.token && !blocked && !sending;
   const pendingCount = proposals.filter((proposal) => ["pending", "applying", "needs_recovery"].includes(proposal.status)).length;
+  const reviewVisible = reviewOpen && (desktopLayout || panel === "review");
   const lastTurn = turns[turns.length - 1];
   function refreshProposals() { setProposalRevision((value) => value + 1); }
   function selectNote(id: string) { setSelectedNoteId(id); setMode("note"); setPanel("main"); }
@@ -155,7 +164,7 @@ export default function Workspace() {
         <div className="sidebar-footnote"><span className="local-icon"><Icon name="check" width="13" height="13" /></span><div><strong>本地知识库</strong><p>原文留存 · 版本可追溯</p></div></div>
       </aside>
       <main id="main-content" className={`main-panel panel ${panel === "main" ? "mobile-visible" : ""}`}>
-        <div className="main-toolbar"><div className="main-tabs" aria-label="主内容视图"><button className={mode === "chat" ? "active" : ""} onClick={() => setMode("chat")} aria-pressed={mode === "chat"}><Icon name="chat" width="16" height="16" />对话</button><button className={mode === "note" ? "active" : ""} onClick={() => setMode("note")} aria-pressed={mode === "note"}><Icon name="book" width="16" height="16" />笔记</button></div><div className="toolbar-actions"><span className="toolbar-caption">{mode === "chat" ? "记录与提问" : note ? `已提交 · v${note.currentVersion}` : "已提交的知识"}</span><button className={`button subtle compact review-toggle ${reviewOpen ? "active" : ""}`} aria-label={reviewOpen ? "收起变更审阅" : "展开变更审阅"} aria-expanded={reviewOpen} aria-controls="review-panel" onClick={() => { setReviewOpen(value => !value); setPanel(reviewOpen ? "main" : "review"); }}><Icon name="review" width="16" height="16" />变更审阅{pendingCount > 0 && <span className="count-badge">{pendingCount}</span>}</button></div></div>
+        <div className="main-toolbar"><div className="main-tabs" aria-label="主内容视图"><button className={mode === "chat" ? "active" : ""} onClick={() => setMode("chat")} aria-pressed={mode === "chat"}><Icon name="chat" width="16" height="16" />对话</button><button className={mode === "note" ? "active" : ""} onClick={() => setMode("note")} aria-pressed={mode === "note"}><Icon name="book" width="16" height="16" />笔记</button></div><div className="toolbar-actions"><span className="toolbar-caption">{mode === "chat" ? "记录与提问" : note ? `已提交 · v${note.currentVersion}` : "已提交的知识"}</span><button className={`button subtle compact review-toggle ${reviewVisible ? "active" : ""}`} aria-label={reviewVisible ? "收起变更审阅" : "展开变更审阅"} aria-expanded={reviewVisible} aria-controls="review-panel" onClick={() => { setReviewOpen(!reviewVisible); setPanel(reviewVisible ? "main" : "review"); }}><Icon name="review" width="16" height="16" />变更审阅{pendingCount > 0 && <span className="count-badge">{pendingCount}</span>}</button></div></div>
         <div className="workspace-banners">{sessionError && <ErrorMessage message={sessionError} onRetry={() => setSessionReload((value) => value + 1)} />}{session && !session.configured && <div className="inline-notice config-notice"><Icon name="alert" /><span>AI 尚未配置。请在服务端设置模型连接，现有笔记、来源与历史仍可浏览。</span><button className="text-button" onClick={() => setSessionReload((value) => value + 1)}>重新检查</button></div>}{blocked && <div className="inline-notice warning" role="alert"><strong>有写入需要恢复，暂时停止新的写入。</strong>{session?.recoveryErrors.map((message, index) => <p key={index}>{message}</p>)}<button className="text-button" onClick={() => { setSessionReload((value) => value + 1); refreshProposals(); }}>刷新恢复状态</button></div>}{notice && <div className="success-notice" role="status"><Icon name="check" width="16" height="16" /><span>{notice}</span><button className="icon-button" aria-label="关闭通知" onClick={() => setNotice("")}><Icon name="close" width="13" height="13" /></button></div>}</div>
         {mode === "chat" ? <><div className="conversation" ref={transcript} role="log" aria-label="对话记录" aria-live="off" onScroll={() => { const element = transcript.current; if (element) followStream.current = element.scrollHeight - element.scrollTop - element.clientHeight < 100; }}>
           {turns.length === 0 ? <ChatWelcome onDraft={startDraft} /> : <div className="turn-list">{turns.map((turn, index) => <article className="chat-turn" key={turn.requestId}>
