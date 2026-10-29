@@ -37,8 +37,12 @@ export function Dialog({ title, eyebrow, children, onClose, wide = false }: { ti
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = ref.current;
+    const trigger = document.activeElement;
     element?.showModal();
-    return () => { if (element?.open) element.close(); };
+    return () => {
+      if (element?.open) element.close();
+      if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus();
+    };
   }, []);
   return <dialog ref={ref} className={`dialog ${wide ? "dialog-wide" : ""}`} aria-labelledby="inspection-title" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) onClose(); } }}>
     <header className="dialog-header"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}<h2 id="inspection-title">{title}</h2></div><button className="icon-button" aria-label="关闭弹层" onClick={onClose}><Icon name="close" /></button></header>

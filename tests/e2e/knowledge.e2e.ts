@@ -119,6 +119,17 @@ test('浏览器：新增、批准 v1、补充、批准 v2、真实引用、恢�
   const topic = 'BrowserLifecycle';
   await page.goto('/');
   expect(await get<NoteSummary[]>(page.request, '/api/notes')).toEqual([]);
+  await expect(page.getByRole('complementary', { name: '变更审阅', exact: true })).toBeHidden();
+  await page.getByRole('button', { name: '记下一个发现', exact: false }).click();
+  await expect(page.getByRole('textbox', { name: '输入知识或问题' })).toHaveValue('帮我记一下：');
+  await expect(page.getByRole('textbox', { name: '输入知识或问题' })).toBeFocused();
+  await page.getByRole('button', { name: '查看操作历史' }).click();
+  await expect(page.getByRole('dialog', { name: '操作历史' })).toBeVisible();
+  await page.getByRole('button', { name: '关闭弹层' }).click();
+  await expect(page.getByRole('button', { name: '查看操作历史' })).toBeFocused();
+  await page.getByRole('button', { name: '展开变更审阅', exact: true }).click();
+  await expect(page.getByRole('complementary', { name: '变更审阅', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '收起变更审阅', exact: true }).click();
   const firstInput = `记录 ${topic}：${firstFact}`;
   const createdEvents = await send(page, firstInput);
   const create = await detail(page.request, createdEvents);
